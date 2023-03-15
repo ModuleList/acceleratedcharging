@@ -6,10 +6,13 @@
 
 要设置温度墙或者充电电流请修改模块目录下的config.ini文件
 
-#直接下载
+喜欢就点个sart吧～
+
+## 直接下载
 
 [点我跳转](https://github.com/heinu123/acceleratedcharging/releases)
 
+## 编译安装
 # go编译命令:
 ```bash
 go build -ldflags="-s -w" -o ./system/bin/charge-current ./system/bin/charge-current.go
