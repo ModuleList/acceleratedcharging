@@ -8,9 +8,6 @@
 
 喜欢就点个stars吧～
 
-## 直接下载
-
-[点我跳转](https://github.com/heinu123/acceleratedcharging/releases)
 
 ## 编译安装
 ```bash
