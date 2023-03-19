@@ -4,9 +4,12 @@ import (
     "fmt"
     "os"
     "os/exec"
+    "io/ioutil"
     "strconv"
     "strings"
+    "log"
     "time"
+    "sync"
 )
 
 var (
@@ -44,82 +47,114 @@ func restart() {
         shell("stop " + p, true)
         shell("start " + p, true)
     }
-    shell("chmod -R 0771 /data/vendor/thermal", true)
-    shell("chown -R root:system /data/vendor/thermal", true)
+    os.Chmod("/data/vendor/thermal", 0771)
+    os.Chown("/data/vendor/thermal", 0, 100)
     shell("chcon -R u:object_r:vendor_data_file:s0 /data/vendor/thermal", true)
     runlog("info","已重启温控相关进程");
 }
 
-func modify_temperature_control_config(resourceDir string) string{ //删除温控
+func writeFile(File string, Text string) {
+    file, err := os.Create(File)
+    if err != nil {
+        panic(err)
+    }
+    defer file.Close()
+    file.WriteString(string(Text))
+}
+
+
+func modify_temperature_control_config(resourceDir string) { //删除温控
     if rmthermal == "true" {
         runlog("info","写入云控配置");
-    	allFileNames := []string{
-    		"thermal-4k.conf",               //所有要处理的文件名
-    		"thermal-arvr.conf",
-    		"thermal-camera.conf",
-    		"thermal-class0.conf",
-    		"thermal-hp-mgame.conf",
-    		"thermal-hp-normal.conf",
-    		"thermal-huanji.conf",
-    		"thermal-india-4k.conf",
-    		"thermal-india-camera.conf",
-    		"thermal-india-class0.conf",
-    		"thermal-india-huanji.conf",
-    		"thermal-india-mgame.conf",
-    		"thermal-india-navigation.conf",
-    		"thermal-india-nolimits.conf",
-    		"thermal-india-normal.conf",
-    		"thermal-india-per-camera.conf",
-    		"thermal-india-per-class0.conf",
-    		"thermal-india-per-navigation.conf",
-    		"thermal-india-per-normal.conf",
-    		"thermal-india-per-video.conf",
-    		"thermal-india-phone.conf",
-    		"thermal-india-tgame.conf",
-    		"thermal-india-video.conf",
-    		"thermal-india-videochat.conf",
-    		"thermal-india-yuanshen.conf",
-    		"thermal-mgame.conf",
-    		"thermal-navigation.conf",
-    		"thermal-nolimits.conf",
-    		"thermal-normal.conf",
-    		"thermal-per-camera.conf",
-    		"thermal-per-class0.conf",
-    		"thermal-per-navigation.conf",
-    		"thermal-per-normal.conf",
-    		"thermal-per-video.conf",
-    		"thermal-phone.conf",
-    		"thermal-tgame.conf",
-    		"thermal-video.conf",
-    		"thermal-videochat.conf",
-    		"thermal-yuanshen.conf",
-    	}
-    	for _, p := range allFileNames {
-    	    if strings.Contains(p, "normal") {
-    	        shell("cp -Rf " + resourceDir + p + " /data/vendor/thermal/config/" + p,true)
-    	        shell("chmod 444 /data/vendor/thermal/config/" + p,true)
-    	        shell("dos2unix /data/vendor/thermal/config/" + p,true)
-    	    } else {
-    	        shell("cp -Rf " + resourceDir + "general.conf" + " /data/vendor/thermal/config/" + p,true)
-    	        shell("chmod 444 /data/vendor/thermal/config/" + p,true)
-    	        shell("dos2unix /data/vendor/thermal/config/" + p,true)
-    	    }
-    	}
-    	restart()
-    }
-    shell("echo '" + speed + "' > /data/adb/modules/acceleratedcharging/" + file,true) //写入充电电流到模块缓存文件
+        generalthermal, err := ioutil.ReadFile(resourceDir + "general.conf")
+        if err != nil {
+            log.Fatal("[err]无法读取文件文件: ", err)
+            os.Exit(1)
+        }
+        normalthermal, err := ioutil.ReadFile(resourceDir + "normal.conf")
+        if err != nil {
+            log.Fatal("[err]无法读取温控文件: ", err)
+            os.Exit(1)
+        }
+        allFileNames := []string{
+            "thermal-4k.conf",               //所有要处理的文件名
+            "thermal-arvr.conf",
+            "thermal-camera.conf",
+            "thermal-class0.conf",
+            "thermal-hp-mgame.conf",
+            "thermal-hp-normal.conf",
+            "thermal-huanji.conf",
+            "thermal-india-4k.conf",
+            "thermal-india-camera.conf",
+            "thermal-india-class0.conf",
+            "thermal-india-huanji.conf",
+            "thermal-india-mgame.conf",
+            "thermal-india-navigation.conf",
+            "thermal-india-nolimits.conf",
+            "thermal-india-normal.conf",
+            "thermal-india-per-camera.conf",
+            "thermal-india-per-class0.conf",
+            "thermal-india-per-navigation.conf",
+            "thermal-india-per-normal.conf",
+            "thermal-india-per-video.conf",
+            "thermal-india-phone.conf",
+            "thermal-india-tgame.conf",
+            "thermal-india-video.conf",
+            "thermal-india-videochat.conf",
+            "thermal-india-yuanshen.conf",
+            "thermal-mgame.conf",
+            "thermal-navigation.conf",
+            "thermal-nolimits.conf",
+            "thermal-normal.conf",
+            "thermal-per-camera.conf",
+            "thermal-per-class0.conf",
+            "thermal-per-navigation.conf",
+            "thermal-per-normal.conf",
+            "thermal-per-video.conf",
+            "thermal-phone.conf",
+            "thermal-tgame.conf",
+            "thermal-video.conf",
+            "thermal-videochat.conf",
+            "thermal-yuanshen.conf",
+        }
+        var wg sync.WaitGroup
+        wg.Add(len(allFileNames))
+    
+        for _, FileNames := range allFileNames {
+            go func(FileNames string) {
+                defer wg.Done()
+                file, err := os.Create("/data/vendor/thermal/config/" + FileNames)
+                if err != nil {
+                    log.Fatal("[err]无法写入温控文件: ", err)
+                    os.Exit(1)
+                }
+                defer file.Close()
+                if strings.Contains(FileNames, "normal") {
+                    file.WriteString(string(normalthermal))
+                } else {
+                    file.WriteString(string(generalthermal))
+                }
+                os.Chmod("/data/vendor/thermal/config/" + FileNames, 444)
+    	        shell("dos2unix /data/vendor/thermal/config/" + FileNames, true)
+            }(FileNames)
+        }
+    
+        wg.Wait()
+        	restart()
+        }
+    writeFile("/data/adb/modules/acceleratedcharging/" + file, speed) //写入充电电流到模块缓存文件
     shell("mount /data/adb/modules/acceleratedcharging/" + file + " /sys/class/power_supply/battery/" + file,true); //通过mount命令挂载充电电流速度
-    runlog("info","修改充电最大电流");
-    return "true"
+    runlog("info","已修改充电最大电流设置和动态温控");
+    shell("sed -i 's/\\[.*\\]/[已修改快充]/g' /data/adb/modules/acceleratedcharging/module.prop", true)
 }
 
 func recovery_temperature_control_config() {
     shell("rm -rf /data/vendor/thermal/config",true)
     shell("mkdir -p /data/vendor/thermal/config",true)
     restart()
-    runlog("info","恢复云控配置");
     shell("umount /sys/class/power_supply/battery/" + file,true)
-    runlog("info","恢复充电最大电流设置");
+    runlog("info","已恢复温控和最大电流设置");
+    shell("sed -i 's/\\[.*\\]/[未充电或满电]/g' /data/adb/modules/acceleratedcharging/module.prop", true)
 }
 
 
@@ -133,9 +168,9 @@ func sleeps(times int) { //硬核休眠
 }
 
 func runlog(level string, text string) {
-    shell("echo \"[$(TZ=Asia/Shanghai date \"+%Y-%m-%d-%H:%M:%S\")]"+ level + ": " + text + "\" >>/data/adb/modules/acceleratedcharging/charge-current.log",true);
-    fmt.Println(text)
+    log.Println("[" + level + "]:" +text)
 }
+
 func main() {
     //读取命令行参数
     args := os.Args
@@ -157,7 +192,14 @@ func main() {
     //初始化变量
     start = 0
     stop = 0
-    shell("rm -rf /data/adb/modules/acceleratedcharging/charge-current.log && touch /data/adb/modules/acceleratedcharging/charge-current.log",true);
+    shell("rm -rf /data/adb/modules/acceleratedcharging/charge-current.lo",true);
+    file, err := os.Create("charge-current.log")
+    if err != nil {
+        log.Fatal("[err]无法创建日志文件: ", err)
+    }
+    defer file.Close()
+    log.SetOutput(file)
+    log.SetFlags(log.Ldate | log.Ltime)
     runlog("info","初始化完成✓");
     for true { //循环
         var batterydata = shell("dumpsys battery",true)
@@ -177,6 +219,7 @@ func main() {
                     stop = 0
                 } else {
                     if start == 0 {
+                        runlog("info","检测到充电状态");
                         modify_temperature_control_config(thermalfile); //删除温控 修改充电速度
                         start = 1
                         stop = 0
@@ -187,13 +230,13 @@ func main() {
             if strings.Contains(batterydata, "level: 100") {
             } else {
                 if stop == 0 {
+                    runlog("info","已充满电");
                     recovery_temperature_control_config(); //恢复
                     start = 0
                     stop = 1
                 }
             }
         }
-        runlog("info","end");
         sleeps(timesleep); //休眠
     }
 }
