@@ -54,4 +54,4 @@ enable_miui_powerkeeper
 call_cloud_conf_release
 mk_thermal_folder
 
-nohup charge-current $speed $temperaturewall $timesleep $rmthermal $file &
+nohup charge-current $speed $temperaturewall $timesleep $rmthermal $file $thermalfile &
