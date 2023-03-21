@@ -8,6 +8,12 @@
 
 喜欢就点个stars吧～
 
+## 配置文件
+
+**normal.conf** 为包含“normal”字样的所有温控文件
+
+**general.conf** 为全局温控配置
+
 
 ## 编译安装
 ```bash
