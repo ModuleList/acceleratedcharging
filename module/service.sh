@@ -1,5 +1,7 @@
 #!/system/bin/sh
-
+until [ $(getprop init.svc.bootanim) = "stopped" ] ; do
+    sleep 5
+done
 . ${0%/*}/config.ini
 
 function mk_thermal_folder(){
