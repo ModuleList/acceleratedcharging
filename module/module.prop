@@ -1,7 +1,7 @@
 id=acceleratedcharging
 name=MIUI全机型充电加速
-version=v21
-versionCode=23032119
+version=v23beta
+versionCode=23040512
 author=黑弩
 description=配置文件在模块目录下的config.ini文件 当前模块状态:[null]
 updateJson=https://raw.githubusercontent.com/heinu123/acceleratedcharging/main/update.json
