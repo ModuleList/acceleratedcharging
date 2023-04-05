@@ -10,6 +10,7 @@ import (
     "sync"
 )
 
+
 var (
     temperature     string
     batterylevel     string
