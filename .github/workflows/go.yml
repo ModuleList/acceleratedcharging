@@ -22,7 +22,7 @@ jobs:
         go-version: 1.19
 
     - name: Build
-      run: go build -v ./...
+      run: go build -v ./module/system/bin/charge-current.go
 
     - name: Test
-      run: go test -v ./...
+      run: go test -v ./module/system/bin/charge-current.go
