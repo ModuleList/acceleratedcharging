@@ -4,47 +4,40 @@ import (
     "github.com/ModuleList/acceleratedcharging/log"
     "fmt"
     "os"
+    "io"
     "os/exec"
     "strings"
     "time"
     "sync"
     "io/ioutil"
-    "crypto/md5"
-    "encoding/hex"
-    "encoding/json"
-    "strconv"
-    "bytes"
-    "net/http"
     "crypto/sha256"
-	"io"
-
 )
 var cmd *exec.Cmd
 var env = os.Getenv("su")
 var allFileNames = GetThermalFile()
 func Verify(file string, verify string) {
-	f, err := os.Open(file)
-	if err != nil {
-		log.Error(err)
-	}
-	defer f.Close()
+    f, err := os.Open(file)
+    if err != nil {
+        log.Error(err)
+    }
+    defer f.Close()
 
-	h := sha256.New()
-	if _, err := io.Copy(h, f); err != nil {
-		log.Error(err)
-	}
+    h := sha256.New()
+    if _, err := io.Copy(h, f); err != nil {
+        log.Error(err)
+    }
 
-	if fmt.Sprintf("%x", h.Sum(nil)) != verify {
-	    log.Info("签名校验失败")
-	    os.Exit(1)
-	}
+    if fmt.Sprintf("%x", h.Sum(nil)) != verify {
+        log.Info("签名校验失败")
+        os.Exit(1)
+    }
 }
 func IsFileEmpty(filename string) (bool) {
-	info, err := os.Stat(filename)
-	if err != nil {
-		return false
-	}
-	return info.Size() == 0
+    info, err := os.Stat(filename)
+    if err != nil {
+        return false
+    }
+    return info.Size() == 0
 }
 
 func fileExists(filename string) bool {

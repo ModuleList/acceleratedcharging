@@ -1,6 +1,6 @@
 #!/system/bin/sh
 
-if [ ! $KSU ];then
+if [ ! "$KSU" ];then
     ui_print "- Magisk ver: $MAGISK_VER"
     if [[ $($MAGISK_VER | grep "kitsune") ]] || [[ $($MAGISK_VER | grep "delta") ]]; then
         ui_print "*********************************************************"
@@ -15,7 +15,7 @@ if [ ! $KSU ];then
         ui_print "! Please use Magisk alpha 26301+"
         abort "*********************************************************"
     fi
-elif [ $KSU ];then
+elif [ "$KSU" ];then
     ui_print "- KernelSU version: $KSU_KERNEL_VER_CODE (kernel) + $KSU_VER_CODE (ksud)"
     if ! [ "$KSU_KERNEL_VER_CODE" ] || [ "$KSU_KERNEL_VER_CODE" -lt 11413 ]; then
         ui_print "*********************************************************"
@@ -63,5 +63,5 @@ enable_miui_powerkeeper
 call_cloud_conf_release
 mk_thermal_folder
 
-set_perm_recursive $MODPATH 0 0 0777 0777
-set_perm $MODPATH/bin/charge-current 0 0 0777 0777
+set_perm_recursive "$MODPATH" 0 0 0777 0777
+set_perm "$MODPATH/bin/charge-current" 0 0 0777 0777

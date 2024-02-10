@@ -20,8 +20,7 @@ func GetConfig(key string) interface{} {
 func GetThermalFile() []string {
     var ret []string
     file := GetConfig("temp.file")
-    var ret []string
-    for _, val := range x.([]interface{}) {
+    for _, val := range file.([]interface{}) {
         ret = append(ret, val.(string))
     }
     return ret
