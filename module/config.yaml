@@ -29,8 +29,8 @@ temp:
   ]
 
 #每轮监听间隔时长 过短会导致功耗增加 单位:秒
-sleep: 5
+sleep: 120
 #顾名思义
-debug: true
+debug: false
 #进行替换的温控配置文件
 configfile: "/data/adb/modules/acceleratedcharging/config/normal.conf"
