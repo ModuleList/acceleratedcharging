@@ -11,9 +11,6 @@ import (
 func Start() {
     status := false
     log.Info("开始监听")
-    if utils.GetConfig("temp.beta").(bool) {
-        log.Info("已开启 实验性动态修改温控(支持非小米机型)")
-    }
     for true {
         batterydata := utils.Shell("dumpsys battery")
         bytes, err := ioutil.ReadFile("/sys/class/power_supply/battery/temp")
