@@ -1,7 +1,6 @@
 package service
 
 import (
-   "io/ioutil"
    "strings"
    "strconv"
    "github.com/ModuleList/acceleratedcharging/log"
@@ -10,44 +9,45 @@ import (
 
 func Start() {
     status := false
-    log.Info("开始监听")
+    recovery := false
+    log.Info("=====开始监听=====")
     for true {
         batterydata := utils.Shell("dumpsys battery")
-        bytes, err := ioutil.ReadFile("/sys/class/power_supply/battery/temp")
-        if err != nil {
-            log.Error(err)
-        }
-        temperature, _ := strconv.Atoi(string(bytes))
+        temperature, _ := strconv.Atoi(utils.Shell("cat /sys/class/power_supply/battery/temp"))
     
-        if strings.Contains(batterydata, "status: 2") || strings.Contains(batterydata, "AC powered: true") {
+        if strings.Contains(batterydata, "status: 2") || strings.Contains(batterydata, "AC powered: true") && ! strings.Contains(batterydata, "level: 100") {
             if utils.GetConfig("debug").(bool) {
                 log.Debug("监听到已进入充电状态")
+                log.Debug(strconv.FormatBool(status))
             }
-            if ! strings.Contains(batterydata, "level: 100") && ! status {
+            if temperature < utils.GetConfig("temp.max").(int) {
+                recovery = false
+            }
+            
+            if ! status && ! recovery {
                 status = true
+                recovery = false
                 utils.Modify()
-                log.Info("已修改快充")
-
-            } else if temperature > utils.GetConfig("temp.max").(int) && ! strings.Contains(batterydata, "level: 100") && status {
-                status = false
-                utils.Recovery()
-                log.Info("温度超过限制")
-            } else if strings.Contains(batterydata, "level: 100") && status {
-                status = false
-                utils.Recovery()
-                log.Info("电池已充满")
+                log.Info("已修改快充设置")
             } else {
-                status = false
-                utils.Recovery()
-                log.Info("未知状态 已初始化")
+                if temperature >= utils.GetConfig("temp.max").(int) && status && ! recovery {
+                    status = false
+                    recovery = true
+                    utils.Recovery()
+                    log.Info("温度超过限制 已恢复快充设置")
+                }
             }
         } else {
+            if status {
+                utils.Recovery()
+                log.Info("已拔出充电器或已满电")
+            }
             if utils.GetConfig("debug").(bool) {
                 log.Debug("未在充电")
             }
         }
         if utils.GetConfig("debug").(bool) {
-            log.Debug("已完成一轮检测 休眠" + strconv.Itoa(utils.GetConfig("sleep").(int)) +"秒")
+            log.Debug("=====已完成一轮检测 休眠" + strconv.Itoa(utils.GetConfig("sleep").(int)) +"秒=====")
         }
         utils.Sleep(utils.GetConfig("sleep").(int))
 

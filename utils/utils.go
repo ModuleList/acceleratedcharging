@@ -10,11 +10,12 @@ import (
     "time"
     "sync"
     "io/ioutil"
+    // "strconv"
     "crypto/sha256"
 )
-var cmd *exec.Cmd
-var env = os.Getenv("su")
-var allFileNames = GetThermalFile()
+var File string;
+var allFileNames []string = GetThermalFile();
+
 func Verify(file string, verify string) {
     f, err := os.Open(file)
     if err != nil {
@@ -32,13 +33,6 @@ func Verify(file string, verify string) {
         os.Exit(1)
     }
 }
-func IsFileEmpty(filename string) (bool) {
-    info, err := os.Stat(filename)
-    if err != nil {
-        return false
-    }
-    return info.Size() == 0
-}
 
 func fileExists(filename string) bool {
     _, err := os.Stat(filename)
@@ -53,12 +47,12 @@ func IfRoot() bool {
 }
 
 func Shell(command string) string {
-    cmd := exec.Command(env, "-c", command)
+    var cmd *exec.Cmd
+    cmd = exec.Command("su", "-c", command)
     output, err := cmd.CombinedOutput()
     if err != nil {
         return err.Error() // 返回错误信息
     }
-
     return strings.TrimSpace(string(output))
 }
 
@@ -71,7 +65,6 @@ func Restart() {
     Shell("chmod -R 0771 /data/vendor/thermal")
     Shell("chown -R root:system /data/vendor/thermal")
     Shell("chcon -R u:object_r:vendor_data_file:s0 /data/vendor/thermal")
-    log.Info("已重启温控相关进程")
 }
 
 func Sleep(times int) { //硬核休眠
@@ -82,7 +75,6 @@ func Sleep(times int) { //硬核休眠
     }
 }
 func Modify() { //删除温控
-    var File string;
     speed := GetConfig("temp.speed").(string)
     if fileExists("/sys/class/power_supply/battery/constant_charge_current") {
         File = "/sys/class/power_supply/battery/constant_charge_current"
@@ -94,10 +86,9 @@ func Modify() { //删除温控
         log.Info("写入最大充电电流文件失败")
         log.Error(err)
     }
-    Shell("mount /data/adb/modules/acceleratedcharging/speed" + " " + File)
-    log.Info("已修改最大充电电流" + speed + "到 " + File)
+    Shell("mount /data/adb/modules/acceleratedcharging/speed "+ File)
+    
     if GetConfig("temp.dynamic").(bool) {
-        log.Info("写入云控配置")
         var wg sync.WaitGroup
         wg.Add(len(allFileNames))
         normal, err := ioutil.ReadFile(GetConfig("configfile").(string))
@@ -119,10 +110,8 @@ func Modify() { //删除温控
         wg.Wait()
         Restart()
     }
-    log.Info("已设置和动态温控")
 }
 func Recovery() {
-    var File string;
     if fileExists("/sys/class/power_supply/battery/constant_charge_current") {
         File = "/sys/class/power_supply/battery/constant_charge_current"
     } else {
@@ -132,5 +121,4 @@ func Recovery() {
     Shell("mkdir -p /data/vendor/thermal/config")
     Shell("umount " + File)
     Restart()
-    log.Info("已恢复温控和最大电流设置")
 }

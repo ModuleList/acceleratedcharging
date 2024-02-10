@@ -10,10 +10,9 @@ import (
 var logger *logs.Logger
 
 func Init() {
-    os.Remove("/data/adb/modules/acceleratedcharging/run.log")
     writer1 := &bytes.Buffer{}
     writer2 := os.Stdout
-    writer3, err := os.OpenFile("run.log", os.O_WRONLY|os.O_CREATE, 0755)
+    writer3, err := os.OpenFile("run.log", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0755)
     if err != nil {
         logs.Fatalf("create file log.txt failed: %v", err)
     }
@@ -32,6 +31,6 @@ func Warn(text error) {
     logger.Panic("[warning]:%s", text)
 }
 
-func Error(err error) {
-    logger.Fatal("[error]:%s", err)
+func Error(text error) {
+    logger.Fatal("[error]:%s", text)
 }

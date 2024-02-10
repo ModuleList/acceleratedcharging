@@ -2,7 +2,7 @@ temp:
   #开启动态移除温控
   dynamic: true
   #温度墙 电池温度如果高于此值关闭快充 450 = 45.0度
-  max: 450
+  max: 480
   #最大充电电流
   speed: "300000000"
   #进行替换的温控配置文件
@@ -29,8 +29,8 @@ temp:
   ]
 
 #每轮监听间隔时长 过短会导致功耗增加 单位:秒
-sleep: 60
+sleep: 5
 #顾名思义
-debug: false
+debug: true
 #进行替换的温控配置文件
 configfile: "/data/adb/modules/acceleratedcharging/config/normal.conf"
