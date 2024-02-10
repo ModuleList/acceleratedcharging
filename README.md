@@ -15,5 +15,6 @@
 
 ```bash
 git clone https://github.com/ModuleList/acceleratedcharging.git && cd acceleratedcharging
+go mod download
 make
 ```
