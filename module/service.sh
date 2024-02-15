@@ -6,4 +6,4 @@ until [ $(getprop init.svc.bootanim) = "stopped" ] ; do
 done
 
 
-nohup "${MODDIR}/bin/charge-current" -service > /dev/null 2>&1
+nohup "${MODDIR}/bin/charge-current" -service &
